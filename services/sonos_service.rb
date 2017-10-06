@@ -7,13 +7,17 @@ module JukeBotService
                       unlockvolumes repeat shuffle crossfade pauseall resumeall
                       clearqueue linein].freeze
 
+    attr_reader :current_room
+
     def initialize(sonos_room: 'Bedroom')
-      @api = create_api_call(sonos_room)
+      @current_room = sonos_room
+      @api = create_api_call
     end
 
     def change_room(room)
       return false unless rooms.include?(room.downcase)
-      @api = create_api_call(room)
+      @current_room = room
+      @api = create_api_call
     end
 
     def method_missing(method, *args, &block)
@@ -51,8 +55,8 @@ module JukeBotService
 
     private
 
-    def create_api_call(sonos_room)
-      base_uri = URI.encode("#{ENV['NODE_SONOS_HTTP_API_URL']}/#{sonos_room}")
+    def create_api_call
+      base_uri = URI.encode("#{ENV['NODE_SONOS_HTTP_API_URL']}/#{@current_room}")
       headers = { Authorization: "Basic #{auth_token}" }
       Blanket.wrap(base_uri, headers: headers)
     end
