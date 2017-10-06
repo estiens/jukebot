@@ -6,6 +6,9 @@ GEM
       i18n (~> 0.7)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
+    blanket_wrapper (3.0.2)
+      httparty
+      recursive-open-struct
     coderay (1.1.1)
     concurrent-ruby (1.0.5)
     domain_name (0.5.20170404)
@@ -50,6 +53,7 @@ GEM
       method_source (~> 0.8.1)
       slop (~> 3.4)
     rack (1.6.8)
+    recursive-open-struct (1.0.5)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
@@ -83,11 +87,14 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  blanket_wrapper
   dotenv
-  httparty
   pry
   rspotify
   slack-ruby-bot
+
+RUBY VERSION
+   ruby 2.3.1p112
 
 BUNDLED WITH
    1.14.5

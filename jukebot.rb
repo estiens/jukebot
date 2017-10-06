@@ -1,100 +1,23 @@
 require 'dotenv'
 Dotenv.load
-
 require 'slack-ruby-bot'
-require 'httparty'
 require 'pry'
-require 'rspotify'
 
-class BotRegex < Regexp
-  def initialize(*values)
-    values = values.map { |value| Regexp.new(value).source }.join('|')
-    super("^(?<bot>[[:alnum:][:punct:]@<>]*)[\\s]+(?<command>#{values})([\\s]+(?<expression>.*)|)$", Regexp::IGNORECASE)
-  end
-end
+require_relative 'commands/what_is_playing'
 
-class String
-  def number?
-    to_i.to_s == self
-  end
-end
+require_relative 'includes/bot_regex'
+require_relative 'includes/string_monkeypatch'
 
-class SonosApi
-  include HTTParty
-  base_uri 'http://24.7.192.65:5005/'
-
-  attr_accessor :sonos_room
-
-  def initialize(sonos_room: 'Bedroom')
-    @options = { basic_auth: { username: ENV['USERNAME'], password: ENV['PASSWORD'] } }
-    @sonos_room = sonos_room
-  end
-
-  def spotify_play(track_url, play_when = 'now')
-    url = URI.encode("/#{@sonos_room}/spotify/#{play_when}/#{track_url}")
-    self.class.get(url, @options)
-  end
-
-  def say(text)
-    url = URI.encode("/#{@sonos_room}/say/#{text}/50")
-    self.class.get(url, @options)
-  end
-
-  def change_volume(volume)
-    url = URI.encode("/#{@sonos_room}/volume/#{volume}")
-    self.class.get(url, @options)
-  end
-
-  def rooms
-    response = self.class.get('/zones', @options)
-    json = return_error_or_parse_response(response)
-    json.map { |h| h.dig('coordinator', 'roomName') }
-  end
-
-  def return_error_or_parse_response(response)
-    return 'something went wrong' unless response.success?
-    JSON.parse(response.body)
-  end
-end
-
-class SpotifySearcher
-  attr_reader :last_search
-
-  def initialize
-    @last_search = nil
-  end
-
-  def find(query)
-    data = find_data(query)
-    data.nil? ? nil : data.uri
-  end
-
-  def find_data(query)
-    tracks = find_tracks(query)
-    !tracks.empty? ? tracks.first : nil
-  end
-
-  def find_tracks(query:, limit:)
-    limit ||= 3
-    RSpotify.authenticate(ENV['RSPOTIFY_TOKEN'], ENV['RSPOTIFY_PASSWORD'])
-    tracks = RSpotify::Track.search(query, limit: limit, market: 'US')
-    @last_search = tracks.sort_by { |track| -track.popularity }
-  end
-
-  def get_album_info(uri)
-    RSpotify.authenticate(ENV['RSPOTIFY_TOKEN'], ENV['RSPOTIFY_PASSWORD'])
-    uri = uri.gsub('spotify:album:', '')
-    RSpotify::Album.find(uri)
-  end
-end
+require_relative 'services/sonos_service'
+require_relative 'services/spotify_service'
 
 class JukeBot < SlackRubyBot::Bot
   def self.api
-    @api ||= SonosApi.new
+    @api ||= JukeBotService::Sonos.new
   end
 
   def self.spotify
-    @spotify ||= SpotifySearcher.new
+    @spotify ||= JukeBotService::Spotify.new
   end
 
   find_music_regex = /find ?(?<digit>\d+)? music (?<query>.*)/i
@@ -119,11 +42,15 @@ class JukeBot < SlackRubyBot::Bot
     play_string = match[:play]
     if play_string.number?
       song_index = match[:play].to_i - 1
-      api.spotify_play(spotify.last_search[song_index].uri)
+      api.spotify_play(track: spotify.last_search[song_index].uri)
       preview_image = spotify.last_search[song_index].album.images.first['url']
       response = "Alright, I'm now playing your request. #{preview_image}"
     else
-      response = "Sorry, I couldn't figure out what to play"
+      track = spotify.find_tracks(query: match[:play], limit: 1).first
+      response = "Sorry couldn't find anything like that" && break unless track
+      api.spotify_play(track: track.uri)
+      response = "Alright, playing #{track.name}. "
+      response += track.album.images.first['url']
     end
     client.say(text: response, channel: data.channel)
   end
@@ -133,7 +60,7 @@ class JukeBot < SlackRubyBot::Bot
     play_string = match[:play]
     if play_string.number?
       song_index = match[:play].to_i - 1
-      api.spotify_play(spotify.last_search[song_index].uri, 'next')
+      api.spotify_play(track: spotify.last_search[song_index].uri, when: 'next')
       preview_image = spotify.last_search[song_index].album.images.first['url']
       response = "Alright, I'm gonna play this next. #{preview_image}"
     else
@@ -147,7 +74,7 @@ class JukeBot < SlackRubyBot::Bot
     play_string = match[:play]
     if play_string.number?
       song_index = match[:play].to_i - 1
-      api.spotify_play(spotify.last_search[song_index].uri)
+      api.spotify_play(track: spotify.last_search[song_index].uri, when: queue)
       response = "Alright, I queued up #{spotify.last_search[song_index].name}"
     else
       response = "Sorry, I couldn't figure out what to queue up"
@@ -169,14 +96,42 @@ class JukeBot < SlackRubyBot::Bot
 
   change_room_regex = /change\sroom\s(?:to )?(?<room>.*)$/i
   match BotRegex.new(change_room_regex) do |client, data, match|
-    @api = SonosApi.new(sonos_room: match[:room])
-    response = "Ok, you are now controlling the #{match[:room]}. Feels good, doesn't it?"
+    if api.change_room(match[:room])
+      response = "Ok, room set to #{match[:room]}."
+    else
+      response = "Sorry, it doesn't look like that room exists."
+      response += "Try #{api.rooms.join(', ')}"
+    end
     client.say(text: response, channel: data.channel)
   end
 
   say_regex = /say\s(?<words>.*)$/i
   match BotRegex.new(say_regex) do |_client, _data, match|
-    api.say(match[:words])
+    api.say(text: match[:words])
+  end
+
+  command 'pause' do |client, data, _match|
+    api.pause
+    response = 'Paused, partner. Say resume to start it up again.'
+    client.say(text: response, channel: data.channel)
+  end
+
+  command 'resume' do |client, data, _match|
+    api.play
+    response = 'Here we go!'
+    client.say(text: response, channel: data.channel)
+  end
+
+  command 'mute' do |client, data, _match|
+    api.groupMute
+    response = 'muted'
+    client.say(text: response, channel: data.channel)
+  end
+
+  command 'unmute' do |client, data, _match|
+    api.groupUnmute
+    response = 'unmuted'
+    client.say(text: response, channel: data.channel)
   end
 
   command 'rooms' do |client, data, _match|
