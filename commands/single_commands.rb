@@ -33,4 +33,40 @@ class JukeBot < SlackRubyBot::Bot
     response = "Current rooms available for control are #{api.rooms}"
     client.say(text: response, channel: data.channel)
   end
+
+  command 'previous' do |client, data, _match|
+    api.previous
+    response = 'Playing it again, Sam.'
+    client.say(text: response, channel: data.channel)
+  end
+
+  command 'next' do |client, data, _match|
+    api.next
+    response = 'Moving right along'
+    client.say(text: response, channel: data.channel)
+  end
+
+  command 'lock' do |client, data, _match|
+    api.lockvolumes
+    response = 'Volumes Locked!'
+    client.say(text: response, channel: data.channel)
+  end
+
+  command 'unlock' do |client, data, _match|
+    api.unlockvolumes
+    response = 'Moving right along'
+    client.say(text: response, channel: data.channel)
+  end
+
+  command 'clear queue' do |client, data, _match|
+    api.clearqueue
+    response = 'Alright, queue is empty!'
+    client.say(text: response, channel: data.channel)
+  end
+
+  command 'linein' do |client, data, _match|
+    api.linein
+    response = 'Switching to line input Captain!'
+    client.say(text: response, channel: data.channel)
+  end
 end

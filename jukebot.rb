@@ -54,10 +54,10 @@ class JukeBot < SlackRubyBot::Bot
   match BotRegex.new(volume_regex) do |client, data, match|
     volume = match[:volume]
     if volume.number?
-      api.change_volume(volume)
+      api.change_group_volume(volume)
       response = "Set the volume to #{volume} :mega:"
     else
-      response = "How am I supposed to chage the volume to #{volume}?"
+      response = "How am I supposed to change the volume to #{volume}?"
     end
     client.say(text: response, channel: data.channel)
   end
