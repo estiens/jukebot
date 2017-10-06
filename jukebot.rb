@@ -8,6 +8,7 @@ require_relative 'includes/string_monkeypatch'
 
 require_relative 'commands/what_is_playing'
 require_relative 'commands/find_music'
+require_relative 'commands/play_music'
 require_relative 'commands/single_commands'
 
 require_relative 'services/sonos_service'
@@ -20,24 +21,6 @@ class JukeBot < SlackRubyBot::Bot
 
   def self.spotify
     @spotify ||= JukeBotService::Spotify.new
-  end
-
-  play_regex = /play (?<play>.*)/i
-  match BotRegex.new(play_regex) do |client, data, match|
-    play_string = match[:play]
-    if play_string.number?
-      song_index = match[:play].to_i - 1
-      api.spotify_play(track: spotify.last_search[song_index].uri)
-      preview_image = spotify.last_search[song_index].album.images.first['url']
-      response = "Alright, I'm now playing your request. #{preview_image}"
-    else
-      track = spotify.find_tracks(query: match[:play], limit: 1).first
-      response = "Sorry couldn't find anything like that" && break unless track
-      api.spotify_play(track: track.uri)
-      response = "Alright, playing #{track.name}. "
-      response += track.album.images.first['url']
-    end
-    client.say(text: response, channel: data.channel)
   end
 
   next_regex = /next (?<play>.*)/i
