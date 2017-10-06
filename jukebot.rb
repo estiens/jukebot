@@ -6,6 +6,19 @@ require 'httparty'
 require 'pry'
 require 'rspotify'
 
+class BotRegex < Regexp
+  def initialize(*values)
+    values = values.map { |value| Regexp.new(value).source }.join('|')
+    super("^(?<bot>[[:alnum:][:punct:]@<>]*)[\\s]+(?<command>#{values})([\\s]+(?<expression>.*)|)$", Regexp::IGNORECASE)
+  end
+end
+
+class String
+  def number?
+    to_i.to_s == self
+  end
+end
+
 class SonosApi
   include HTTParty
   base_uri 'http://24.7.192.65:5005/'
@@ -84,8 +97,9 @@ class JukeBot < SlackRubyBot::Bot
     @spotify ||= SpotifySearcher.new
   end
 
-  match(/find ?(\d+)? music (.*)/i) do |client, data, match|
-    tracks = spotify.find_tracks(query: match[2], limit: match[1])
+  find_music_regex = /find ?(?<digit>\d+)? music (?<query>.*)/i
+  match BotRegex.new(find_music_regex) do |client, data, match|
+    tracks = spotify.find_tracks(query: match[:query], limit: match[:digit])
     artist_array = []
     tracks.each do |track|
       artists = track.artists.map(&:name).join(',')
@@ -100,57 +114,69 @@ class JukeBot < SlackRubyBot::Bot
     client.say(text: response, channel: data.channel)
   end
 
-  match(/play (.*)/i) do |client, data, match|
-    number = match[1].to_i.to_s == match[1]
-    if number
-      song_index = match[1].to_i - 1
-      uri = spotify.last_search[song_index].uri
-      api.spotify_play(uri)
+  play_regex = /play (?<play>.*)/i
+  match BotRegex.new(play_regex) do |client, data, match|
+    play_string = match[:play]
+    if play_string.number?
+      song_index = match[:play].to_i - 1
+      api.spotify_play(spotify.last_search[song_index].uri)
       preview_image = spotify.last_search[song_index].album.images.first['url']
       response = "Alright, I'm now playing your request. #{preview_image}"
-      client.say(text: response, channel: data.channel)
+    else
+      response = "Sorry, I couldn't figure out what to play"
     end
+    client.say(text: response, channel: data.channel)
   end
 
-  match(/next (.*)/i) do |client, data, match|
-    number = match[1].to_i.to_s == match[1]
-    if number
-      song_index = match[1].to_i - 1
-      uri = spotify.last_search[song_index].uri
-      api.spotify_play(uri, 'next')
+  next_regex = /next (?<play>.*)/i
+  match BotRegex.new(next_regex) do |client, data, match|
+    play_string = match[:play]
+    if play_string.number?
+      song_index = match[:play].to_i - 1
+      api.spotify_play(spotify.last_search[song_index].uri, 'next')
       preview_image = spotify.last_search[song_index].album.images.first['url']
-      response = "Alright, I'm playing what you want next. #{preview_image}"
-      client.say(text: response, channel: data.channel)
+      response = "Alright, I'm gonna play this next. #{preview_image}"
+    else
+      response = "Sorry, I couldn't figure out what to play next"
     end
+    client.say(text: response, channel: data.channel)
   end
 
-  match(/queue (.*)/i) do |client, data, match|
-    number = match[1].to_i.to_s == match[1]
-    if number
-      song_index = match[1].to_i - 1
-      uri = spotify.last_search[song_index].uri
-      api.spotify_play(uri, 'queue')
+  queue_regex = /queue (?<play>.*)/i
+  match BotRegex.new(queue_regex) do |client, data, match|
+    play_string = match[:play]
+    if play_string.number?
+      song_index = match[:play].to_i - 1
+      api.spotify_play(spotify.last_search[song_index].uri)
       response = "Alright, I queued up #{spotify.last_search[song_index].name}"
-      client.say(text: response, channel: data.channel)
+    else
+      response = "Sorry, I couldn't figure out what to queue up"
     end
-  end
-
-  match(/volume (.*)/i) do |client, data, match|
-    volume = match[1]
-    api.change_volume(volume)
-    response = "Set the volume to #{volume} :mega:"
     client.say(text: response, channel: data.channel)
   end
 
-  match(/.*\schange\sroom\s(?:to )?(?<room>.*)$/i) do |client, data, match|
-    room = match[:room]
-    @api = SonosApi.new(sonos_room: room)
-    response = "Ok, I changed the room you are controlling to the #{room}"
+  volume_regex = /volume (?<volume>.*)/i
+  match BotRegex.new(volume_regex) do |client, data, match|
+    volume = match[:volume]
+    if volume.number?
+      api.change_volume(volume)
+      response = "Set the volume to #{volume} :mega:"
+    else
+      response = "How am I supposed to chage the volume to #{volume}?"
+    end
     client.say(text: response, channel: data.channel)
   end
 
-  match(/.*\ssay\s(.*)$/i) do |_client, _data, match|
-    api.say(match[1])
+  change_room_regex = /change\sroom\s(?:to )?(?<room>.*)$/i
+  match BotRegex.new(change_room_regex) do |client, data, match|
+    @api = SonosApi.new(sonos_room: match[:room])
+    response = "Ok, you are now controlling the #{match[:room]}. Feels good, doesn't it?"
+    client.say(text: response, channel: data.channel)
+  end
+
+  say_regex = /say\s(?<words>.*)$/i
+  match BotRegex.new(say_regex) do |_client, _data, match|
+    api.say(match[:words])
   end
 
   command 'rooms' do |client, data, _match|
