@@ -3,10 +3,11 @@ Dotenv.load
 require 'slack-ruby-bot'
 require 'pry'
 
-require_relative 'commands/what_is_playing'
-
 require_relative 'includes/bot_regex'
 require_relative 'includes/string_monkeypatch'
+
+require_relative 'commands/what_is_playing'
+require_relative 'commands/find_music'
 
 require_relative 'services/sonos_service'
 require_relative 'services/spotify_service'
@@ -18,23 +19,6 @@ class JukeBot < SlackRubyBot::Bot
 
   def self.spotify
     @spotify ||= JukeBotService::Spotify.new
-  end
-
-  find_music_regex = /find ?(?<digit>\d+)? music (?<query>.*)/i
-  match BotRegex.new(find_music_regex) do |client, data, match|
-    tracks = spotify.find_tracks(query: match[:query], limit: match[:digit])
-    artist_array = []
-    tracks.each do |track|
-      artists = track.artists.map(&:name).join(',')
-      name = track.name
-      album = track.album.name
-      artist_array << { artists: artists, name: name, album: album }
-    end
-    response = "I found the following #{artist_array.length} songs."
-    artist_array.each_with_index do |artist, idx|
-      response += "#{idx + 1}: #{artist[:name]} by #{artist[:artists]} on #{artist[:album]}. "
-    end
-    client.say(text: response, channel: data.channel)
   end
 
   play_regex = /play (?<play>.*)/i
