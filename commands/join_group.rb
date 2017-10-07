@@ -3,7 +3,7 @@ class JoinGroup < SlackRubyBot::Commands::Base
   match BotRegex.new(join_regex)
 
   help do
-    title 'join_regex'
+    title 'join'
     desc '`join <room>` - joins the current room to another speaker/group'
     long_desc 'will fail if the room does not exist.'\
               'Example: `join living room`'
