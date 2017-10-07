@@ -115,7 +115,7 @@ class JukeBot < SlackRubyBot::Bot
   help do
     title 'clear queue'
     desc '`clear queue` - clears the whole queue'
-    long desc 'Warning: stops current music.'
+    long_desc 'Warning: stops current music.'
   end
 
   command 'clear queue' do |client, data, _match|
