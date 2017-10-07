@@ -33,6 +33,10 @@ module JukeBotService
       @api.spotify.get("#{when_to_play}/#{track}")
     end
 
+    def radio_play(station_id:)
+      @api.tunein.play.get(station_id)
+    end
+
     def say(text:, volume: 50)
       @api.say.get(URI.encode("#{text}/#{volume}"))
     end

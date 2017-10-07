@@ -12,9 +12,12 @@ require_relative 'commands/play_music'
 require_relative 'commands/next_music'
 require_relative 'commands/queue_music'
 require_relative 'commands/single_commands'
+require_relative 'commands/find_radio'
+require_relative 'commands/play_radio'
 
 require_relative 'services/sonos_service'
 require_relative 'services/spotify_service'
+require_relative 'services/tune_in_service'
 
 class JukeBot < SlackRubyBot::Bot
   def self.api
@@ -23,6 +26,10 @@ class JukeBot < SlackRubyBot::Bot
 
   def self.spotify
     @spotify ||= JukeBotService::Spotify.new
+  end
+
+  def self.tunein
+    @tunein ||= JukeBotService::TuneIn.new
   end
 
   volume_regex = /volume (?<volume>.*)/i
