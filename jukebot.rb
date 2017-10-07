@@ -20,6 +20,8 @@ require_relative 'commands/find_radio'
 require_relative 'commands/play_radio'
 require_relative 'commands/join_group'
 require_relative 'commands/leave_group'
+require_relative 'commands/change_group_volume'
+require_relative 'commands/change_room_volume'
 
 class JukeBot < SlackRubyBot::Bot
   def self.api
@@ -32,18 +34,6 @@ class JukeBot < SlackRubyBot::Bot
 
   def self.tunein
     @tunein ||= JukeBotService::TuneIn.new
-  end
-
-  volume_regex = /volume (?<volume>.*)/i
-  match BotRegex.new(volume_regex) do |client, data, match|
-    volume = match[:volume]
-    if volume.number?
-      api.change_group_volume(volume)
-      response = "Set the volume to #{volume} :mega:"
-    else
-      response = "How am I supposed to change the volume to #{volume}?"
-    end
-    client.say(text: response, channel: data.channel)
   end
 
   change_room_regex = /change\sroom\s(?:to )?(?<room>.*)$/i

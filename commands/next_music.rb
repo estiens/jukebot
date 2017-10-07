@@ -5,7 +5,7 @@ class NextMusic < SlackRubyBot::Commands::Base
   def self.next_track(query)
     track = JukeBot.spotify.get_track_from_query(query)
     return "Sorry, can't find that song." unless track
-    JukeBot.api.spotify_play(track: track.uri, when_to_play: 'queue')
+    JukeBot.api.spotify_play(track: track.uri, when_to_play: 'next')
     "Alright, I'll play #{track.name} next!"
   end
 
