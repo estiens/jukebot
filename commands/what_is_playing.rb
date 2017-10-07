@@ -16,7 +16,9 @@ class WhatIsPlaying < SlackRubyBot::Commands::Base
     current_track = JukeBot.api.current_track
     artist = current_track[:artist]
     title = current_track[:title]
-    response = "#{title} by #{artist}"
+    image = current_track[:absoluteAlbumArtUri]
+    response = "#{title} by #{artist}]"
+    response += "\n #{image}" if image
     client.say(text: response, channel: data.channel)
   end
 end

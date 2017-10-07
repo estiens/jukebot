@@ -30,7 +30,11 @@ class JukeBot < SlackRubyBot::Bot
   end
 
   command 'rooms' do |client, data, _match|
-    response = "Current rooms available for control are #{api.rooms}"
+    rooms = api.rooms
+    response = "There's currently #{rooms.length} groups of speakers."
+    rooms.each_with_index do |room, idx|
+      response += "\nGroup #{idx + 1}: #{room.join(', ')}"
+    end
     client.say(text: response, channel: data.channel)
   end
 

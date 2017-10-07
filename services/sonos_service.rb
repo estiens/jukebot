@@ -5,7 +5,7 @@ module JukeBotService
     API_COMMANDS = %i[mute unmute pause play groupMute groupUnmute togglemute
                       state next previous favorite favorites playlist lockvolumes
                       unlockvolumes repeat shuffle crossfade pauseall resumeall
-                      clearqueue linein].freeze
+                      clearqueue linein leave].freeze
 
     attr_reader :current_room
 
@@ -15,7 +15,7 @@ module JukeBotService
     end
 
     def change_room(room)
-      return false unless rooms.include?(room.downcase)
+      return false unless room_list.include?(room.downcase)
       @current_room = room
       @api = create_api_call
     end
@@ -26,6 +26,11 @@ module JukeBotService
       else
         super
       end
+    end
+
+    def join(room)
+      return false unless room_list.include?(room.downcase)
+      @api.join.get(URI.encode(room))
     end
 
     # when can be 'now', 'next', or 'queue'
@@ -49,8 +54,13 @@ module JukeBotService
       @api.groupvolume.get(volume)
     end
 
+    def room_list
+      rooms.flatten.uniq
+    end
+
     def rooms
-      @api.zones.get.map { |z| z.coordinator.roomName }.map(&:downcase)
+      groups = @api.zones.get.map(&:members)
+      groups.map { |group| group.map { |g| g.roomName.downcase } }
     end
 
     def current_track
