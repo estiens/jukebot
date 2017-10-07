@@ -5,7 +5,24 @@ module JukeBotService
     attr_reader :last_search
 
     def initialize
-      @last_search = nil
+      @last_search = []
+    end
+
+    def get_track_from_query(query)
+      if query.number?
+        track_from_last_search(query)
+      else
+        find_track(query)
+      end
+    end
+
+    def track_from_last_search(query)
+      song_index = query.to_i - 1
+      @last_search[song_index]
+    end
+
+    def find_track(name)
+      find_tracks(query: name, limit: 1).first
     end
 
     def find_tracks(query:, limit:)

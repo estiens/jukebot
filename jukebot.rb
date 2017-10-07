@@ -9,6 +9,8 @@ require_relative 'includes/string_monkeypatch'
 require_relative 'commands/what_is_playing'
 require_relative 'commands/find_music'
 require_relative 'commands/play_music'
+require_relative 'commands/next_music'
+require_relative 'commands/queue_music'
 require_relative 'commands/single_commands'
 
 require_relative 'services/sonos_service'
@@ -21,33 +23,6 @@ class JukeBot < SlackRubyBot::Bot
 
   def self.spotify
     @spotify ||= JukeBotService::Spotify.new
-  end
-
-  next_regex = /next (?<play>.*)/i
-  match BotRegex.new(next_regex) do |client, data, match|
-    play_string = match[:play]
-    if play_string.number?
-      song_index = match[:play].to_i - 1
-      api.spotify_play(track: spotify.last_search[song_index].uri, when: 'next')
-      preview_image = spotify.last_search[song_index].album.images.first['url']
-      response = "Alright, I'm gonna play this next. #{preview_image}"
-    else
-      response = "Sorry, I couldn't figure out what to play next"
-    end
-    client.say(text: response, channel: data.channel)
-  end
-
-  queue_regex = /queue (?<play>.*)/i
-  match BotRegex.new(queue_regex) do |client, data, match|
-    play_string = match[:play]
-    if play_string.number?
-      song_index = match[:play].to_i - 1
-      api.spotify_play(track: spotify.last_search[song_index].uri, when: queue)
-      response = "Alright, I queued up #{spotify.last_search[song_index].name}"
-    else
-      response = "Sorry, I couldn't figure out what to queue up"
-    end
-    client.say(text: response, channel: data.channel)
   end
 
   volume_regex = /volume (?<volume>.*)/i
