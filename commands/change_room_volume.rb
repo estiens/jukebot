@@ -2,6 +2,12 @@ class ChangeRoomVolume < SlackRubyBot::Commands::Base
   volume_regex = /room volume (?<volume>.*)/i
   match BotRegex.new(volume_regex)
 
+  help do
+    title 'room volume'
+    desc '`room volume <num>` - changes the volume of the current room'
+    long_desc 'takes a number between 1 and 100. Example: `room volume 20`'
+  end
+
   def self.call(client, data, match)
     volume = match[:volume]
     if volume.number?

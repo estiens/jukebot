@@ -2,6 +2,13 @@ class FindMusic < SlackRubyBot::Commands::Base
   find_music_regex = /find ?(?<digit>\d+)? music (?<query>.*)/i
   match BotRegex.new(find_music_regex)
 
+  help do
+    title 'find music'
+    desc '`find <num> music <query>` - searches spotify for music'
+    long_desc 'returns <num> results. Can be used with or without a number. '\
+              'Examples: `find 5 music fugazi` or `find music dark side moon`'
+  end
+
   def self.make_track_info(track)
     artists = track.artists.map(&:name).join(',')
     name = track.name

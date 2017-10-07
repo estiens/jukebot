@@ -1,6 +1,6 @@
 class LeaveGroup < SlackRubyBot::Commands::Base
   command 'leave'
-  command 'sandalone'
+  command 'standalone'
 
   def self.call(client, data, _match)
     JukeBot.api.leave

@@ -19,3 +19,5 @@ require_relative 'commands/change_group_volume'
 require_relative 'commands/change_room_volume'
 require_relative 'commands/change_room'
 require_relative 'commands/say'
+
+require_relative 'about'
