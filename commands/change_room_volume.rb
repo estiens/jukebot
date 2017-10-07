@@ -1,4 +1,4 @@
-class ChangeGroupVolume < SlackRubyBot::Commands::Base
+class ChangeRoomVolume < SlackRubyBot::Commands::Base
   volume_regex = /room volume (?<volume>.*)/i
   match BotRegex.new(volume_regex)
 
