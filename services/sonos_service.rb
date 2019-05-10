@@ -76,7 +76,7 @@ module JukeBotService
     end
 
     def auth_token
-      Base64.encode64("#{ENV['USERNAME']}:#{ENV['PASSWORD']}")
+      Base64.strict_encode64("#{ENV['USERNAME']}:#{ENV['PASSWORD']}")
     end
   end
 end
