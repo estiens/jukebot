@@ -9,15 +9,16 @@ module JukeBotService
 
     attr_reader :current_room
 
-    def initialize(sonos_room: 'Bedroom')
-      @current_room = sonos_room
-      @api = create_api_call
+    def initialize
+      @global_api = create_api_call
+      @current_room = find_first_zone
+      @api = @global_api.send(@current_room)
     end
 
     def change_room(room)
       return false unless room_list.include?(room.downcase)
       @current_room = room
-      @api = create_api_call
+      @api = @global_api.send(@current_room)
     end
 
     def method_missing(method, *args, &block)
@@ -58,8 +59,8 @@ module JukeBotService
       rooms.flatten.uniq
     end
 
-    def rooms
-      groups = @api.zones.get.map(&:members)
+    def rooms(api: @api)
+      groups = api.zones.get.map(&:members)
       groups.map { |group| group.map { |g| g.roomName.downcase } }
     end
 
@@ -70,13 +71,17 @@ module JukeBotService
     private
 
     def create_api_call
-      base_uri = URI.encode("#{ENV['NODE_SONOS_HTTP_API_URL']}/#{@current_room}")
+      base_uri = URI.encode("#{ENV['NODE_SONOS_HTTP_API_URL']}")
       headers = { Authorization: "Basic #{auth_token}" }
       Blanket.wrap(base_uri, headers: headers)
     end
 
     def auth_token
       Base64.encode64("#{ENV['USERNAME']}:#{ENV['PASSWORD']}")
+    end
+
+    def find_first_zone
+      rooms(api: @global_api).flatten.first
     end
   end
 end
