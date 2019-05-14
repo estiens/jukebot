@@ -1,11 +1,9 @@
 source 'https://rubygems.org'
-ruby '2.3.1'
 
 gem 'slack-ruby-bot'
+gem 'async-websocket', '~> 0.8.0'
 
 gem 'blanket_wrapper'
-gem 'celluloid-io'
 gem 'dotenv'
 gem 'nokogiri'
-gem 'pry'
 gem 'rspotify'
