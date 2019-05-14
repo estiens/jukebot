@@ -1,0 +1,17 @@
+version: "3.6"
+services:
+  jukebot:
+    build: .
+    container_name: jukebot
+    restart: unless-stopped
+    environment:
+      SLACK_API_TOKEN: CHANGEME
+      RSPOTIFY_TOKEN: CHANGEME
+      RSPOTIFY_PASSWORD: CHANGEME
+      USERNAME: CHANGEME
+      PASSWORD: CHANGEME
+      NODE_SONOS_HTTP_API_URL: "http://CHANGEME:5005"
+      SLACK_RUBY_BOT_ALIASES: jukebot bot
+    # Uncomment for development
+    # volumes:
+    #   - .:/srv
