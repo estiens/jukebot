@@ -31,6 +31,26 @@ Built on the slack-ruby-bot framework. [https://github.com/slack-ruby/slack-ruby
 ### Run It
 1) `ruby jukebot.rb`
 
+### Run It With Docker
+  1) Edit `docker-compose.yml` to set environment variables
+  2) `docker-compose build --pull`
+  3) `docker-compose up -d`
+
+#### View the logs:
+
+  `docker-compose logs -f`
+
+#### Stop:
+
+  `docker-compose down`
+
+#### Upgrade:
+
+  1) `docker-compose down`
+  2) `git pull`
+  3) `docker-compose build --pull`
+  4) `docker-compose up -d`
+
 ### JukeBot controls your Sonos rooms
 ![alt text](https://d3vv6lp55qjaqc.cloudfront.net/items/1o2O0L2h3M0f2w2k0h0R/Screen%20Shot%202017-10-07%20at%205.52.34%20PM.png?X-CloudApp-Visitor-Id=75963&v=b33e37de "Room Control")
 
