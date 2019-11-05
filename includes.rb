@@ -5,6 +5,7 @@ require_relative 'services/sonos_service'
 require_relative 'services/spotify_service'
 require_relative 'services/tune_in_service'
 
+require_relative 'commands/help'
 require_relative 'commands/what_is_playing'
 require_relative 'commands/find_music'
 require_relative 'commands/play_music'
