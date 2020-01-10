@@ -47,6 +47,8 @@ module JukeBotService
 
       RSpotify.authenticate(ENV['RSPOTIFY_TOKEN'], ENV['RSPOTIFY_PASSWORD'])
       RSpotify::Playlist.find_by_id(uri)
+    rescue RestClient::NotFound
+      nil
     end
   end
 end
