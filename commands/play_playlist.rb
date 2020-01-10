@@ -23,6 +23,7 @@ class PlayPlaylist < SlackRubyBot::Commands::Base
 
     JukeBot.api.spotify_play(track: playlist.uri)
     preview_image = playlist.images.first['url']
+    JukeBot.api.shuffle(true)
 
     [
       {
@@ -39,13 +40,22 @@ class PlayPlaylist < SlackRubyBot::Commands::Base
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": playlist.name
+          "text": "Playlist: #{playlist.name}"
         },
         "accessory": {
           "type": "image",
           "image_url": preview_image,
           "alt_text": "Playlist thumbnail"
         }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "*Shuffle:* On"
+          }
+        ]
       }
     ]
   end

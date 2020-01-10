@@ -68,6 +68,18 @@ module JukeBotService
       state.currentTrack.to_h
     end
 
+    def shuffle(enabled)
+      if enabled && !shuffle?
+        @api.shuffle.on.get
+      elsif !enabled && shuffle?
+        @api.shuffle.off.get
+      end
+    end
+
+    def shuffle?
+      state.playMode.shuffle
+    end
+
     private
 
     def create_api_call
