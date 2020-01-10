@@ -4,7 +4,7 @@ class PlayPlaylist < SlackRubyBot::Commands::Base
 
   help do
     title 'play playlist'
-    desc '`play <link>` - plays the given playlist on spotify'
+    desc '`play playlist <link>` - plays the given playlist on spotify'
   end
 
   def self.play_playlist(query)
