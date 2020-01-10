@@ -37,5 +37,16 @@ module JukeBotService
       uri = uri.gsub('spotify:album:', '')
       RSpotify::Album.find(uri)
     end
+
+    def get_playlist(uri)
+      if uri =~ %r[https://open\.spotify\.com/playlist/(?<id>\w+)]
+        uri = Regexp.last_match[:id]
+      elsif uri =~ %r[(?:spotify:user:)?spotify:playlist:(?<id>\w+)]
+        uri = Regexp.last_match[:id]
+      end
+
+      RSpotify.authenticate(ENV['RSPOTIFY_TOKEN'], ENV['RSPOTIFY_PASSWORD'])
+      RSpotify::Playlist.find_by_id(uri)
+    end
   end
 end
