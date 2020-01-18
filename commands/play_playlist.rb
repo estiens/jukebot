@@ -21,9 +21,9 @@ class PlayPlaylist < SlackRubyBot::Commands::Base
       ]
     end
 
+    JukeBot.api.shuffle(true)
     JukeBot.api.spotify_play(track: playlist.uri)
     preview_image = playlist.images.first['url']
-    JukeBot.api.shuffle(true)
 
     [
       {
