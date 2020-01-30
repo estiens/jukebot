@@ -80,6 +80,10 @@ module JukeBotService
       state.playMode.shuffle
     end
 
+    def clear_queue
+      @api.clearqueue.get
+    end
+
     private
 
     def create_api_call
