@@ -1,5 +1,5 @@
 class PlayMusic < SlackRubyBot::Commands::Base
-  play_regex = /play (?<play>.*)/i
+  play_regex = /play music (?<play>.*)/i
   match BotRegex.new(play_regex)
 
   help do
